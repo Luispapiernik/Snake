@@ -1,183 +1,104 @@
-import os
-import re
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
-logger = """import logging
-
-
-class Format(logging.Formatter):
-    grey = "\\x1b[38;21m"
-    yellow = "\\x1b[33;21m"
-    red = "\\x1b[31;21m"
-    bold_red = "\\x1b[31;1m"
-    reset = "\\x1b[0m"
-    green = "\\x1b[32m"
-    asctime = "%(asctime)s"
-    name = "[%(name)s]"
-    levelname = "[%(levelname)-4s]"
-    message = "%(message)s"
-
-    FORMATS = {
-        logging.DEBUG: f"{asctime} {grey} {name} {levelname} {reset} {message}",
-        logging.INFO: f"{asctime} {green} {name} {levelname} {reset} {message}",
-        logging.WARNING: f"{asctime} {yellow} {name} {levelname} {message} {reset}",
-        logging.ERROR: f"{asctime} {red} {name} {levelname} {message} {reset}",
-        logging.CRITICAL: f"{asctime} {bold_red} {name} {levelname} {message} {reset}",
-    }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
-
-
-def create_logger(logger_name: str) -> logging.Logger:
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(level=logging.DEBUG)
-
-    # create formatter and add it to the handlers
-    formatter = Format()
-
-    # file
-    file = logging.FileHandler(f"{logger_name}.log")
-    file.setLevel(level=logging.DEBUG)
-    file.setFormatter(formatter)
-
-    # console
-    console = logging.StreamHandler()
-    console.setLevel(level=logging.DEBUG)
-    console.setFormatter(formatter)
-
-    logger.addHandler(file)
-    logger.addHandler(console)
-
-    return logger
-"""
-
-
-config = """from pydantic import BaseSettings, Field
-
-
-class Settings(BaseSettings):
-    ...
-
-
-settings = Settings()
-"""
-
-main_file_content = """from argparse import ArgumentParser
-
-
-def main():
-    parser = ArgumentParser()
-
-    args = parser.parse_args()
-    print(args)
-
-
-if __name__ == "__main__":
-    main()
-
-"""
-
-
-def generate_directories(args):
-    # generate the root directory of the source code
-    os.makedirs(args.name, exist_ok=True)
-
-    if args.tests:
-        # the directory that will contains the tests files
-        os.makedirs("tests", exist_ok=True)
-
-
-def generate_files(args):
-    # in order to consider the root directory as a python library directory
-    open(os.path.join(args.name, "__init__.py"), "w").close()
-
-    if args.config:
-        with open(os.path.join(args.name, "config.py"), "w") as file:
-            file.write(config)
-
-    if args.logger:
-        with open(os.path.join(args.name, "logger.py"), "w") as file:
-            file.write(logger)
-
-
-def configure_poetry_project(args):
-    description = input("Write a project description: ") or "Default description"
-
-    output_lines = []
-    with open("pyproject.toml") as file:
-        for line in file.readlines():
-            if "name = " in line:
-                line = re.sub(r"\"[\w\s-]+\"", f'"{args.name}"', line)
-            if "description = " in line:
-                line = re.sub(r"\"[\w\s-]+\"", f'"{description}"', line)
-
-            if "[tool.poetry.dev-dependencies]" in line:
-                if args.config:
-                    output_lines[-1] = 'pydantic = "*"\n'
-                    output_lines.append("\n")
-
-            output_lines.append(line)
-
-    with open("pyproject.toml", "w") as file:
-        for line in output_lines:
-            file.write(line)
+from snake.cellgraph import CellGraph, COLORS
+from snake.snake import Snake
 
 
 def execute(args):
-    if args.all:
-        args.tests = True
-        args.config = True
-        args.logger = True
-        args.overwrite_main = True
+    colors = {0: args.color_cell, 1: args.color_snake, 2: args.color_food}
 
-    generate_directories(args)
-    generate_files(args)
-    configure_poetry_project(args)
+    snake = Snake(args.width, args.height, colors, food=args.food,
+                  filename=args.filename)
 
-    if args.overwrite_main:
-        with open("main.py", "w") as file:
-            file.write(main_file_content)
+    game = CellGraph(snake, margin_width=args.margin_width,
+                     margin_height=args.margin_height,
+                     cellwidth=args.cell_width, cellheight=args.cell_height,
+                     separation_between_cells=args.sbc,
+                     background_color=args.background_color,
+                     fps=args.velocity)
+
+    game.run(acceleration=args.acceleration)
 
 
 def main():
-    parser = ArgumentParser()
+    epilog = ''' Clasico juego Snake.
 
-    parser.add_argument("-n", "--name", default="app", help="name of the project")
-    parser.add_argument(
-        "-t", "--tests", action="store_true", help="If the project will be tested"
-    )
-    parser.add_argument(
-        "-c",
-        "--config",
-        action="store_true",
-        help="If the project need enviroment variables",
-    )
-    parser.add_argument(
-        "-l",
-        "--logger",
-        action="store_true",
-        help="If the project will have a logger system",
-    )
-    parser.add_argument(
-        "-om",
-        "--overwrite-main",
-        action="store_true",
-        help="If after execution the main file content will be erased",
-    )
-    parser.add_argument(
-        "-a",
-        "--all",
-        action="store_true",
-        help="To add all generated files",
-    )
+El programa permite cargar un mapa desde un archivo de texto(donde 0
+representa que no hay nada en la celda y 3 representa un obstaculo), ademas se
+pueden agregar obstaculos en celda deseada haciendo click con el mouse.
+Mediante la pulsacion de la tecla SPACE o p se puede pausar el juego, ademas se
+puede tomar una captura de pantalla con la tecla s, y si se presiona la
+tecla e la configuracion del tablero se guarda en un archivo de texto.
+
+
+Los colores disponibles son:
+    - WHITE
+    - BLACK
+    - CYAN
+    - GREEN
+    - BLUE
+    - YELLOW
+    - ORANGE
+    - MAGENTA
+    - SILVER
+    - PURPLE
+    - TEAL
+    - GRAY
+    - RED
+    - BROWN
+    - GOLDEN'''
+
+    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
+                            epilog=epilog)
+
+    parser.add_argument('--filename', default=None,
+                        help='''Archivo con la configuracion
+                        inicial del tablero''')
+    parser.add_argument('-o', '--output', default='gameoflife',
+                        dest='name', help='''nombre con el que se guarda la
+                        captura de pantalla(si se hace)''')
+    parser.add_argument('-w', '--width', type=int, default=30,
+                        help='numero de celdas horizontales')
+    parser.add_argument('--height', type=int, default=30,
+                        help='numero de celdas verticales')
+    parser.add_argument('-mw', '--margin-width', type=int, default=0,
+                        help='largo de la margen horizontal')
+    parser.add_argument('-mh', '--margin-height', type=int, default=0,
+                        help='largo de la margen vertical')
+    parser.add_argument('-cw', '--cell-width', type=int, default=5,
+                        help='ancho horizontal de las celdas')
+    parser.add_argument('-ch', '--cell-height', type=int, default=5,
+                        help='ancho vertical de las celdas')
+    parser.add_argument('-sbc', '--separation-between-cells', type=int,
+                        default=1, dest='sbc',
+                        help='separacion entre las celdas')
+    parser.add_argument('-f', '--food', type=int, default=1,
+                        help='cantidad de comida en el tablero')
+    parser.add_argument('-bc', '--background-color', type=lambda x: x.upper(),
+                        metavar='COLOR', default='BLACK',
+                        choices=COLORS.keys(),
+                        help='''color de fondo, es el mismo que el de la
+                        margen y la separacion entre celdas''')
+    parser.add_argument('-cf', '--color-food', type=lambda x: x.upper(),
+                        metavar='COLOR', default='GREEN',
+                        choices=COLORS.keys(),
+                        help='color de la comida')
+    parser.add_argument('-cs', '--color-snake', type=lambda x: x.upper(),
+                        metavar='COLOR', default='RED',
+                        choices=COLORS.keys(),
+                        help='color de la culebrita')
+    parser.add_argument('-cc', '--color-cell', type=lambda x: x.upper(),
+                        metavar='COLOR', default='WHITE',
+                        choices=COLORS.keys(),
+                        help='color de las celdas vacias')
+    parser.add_argument('-v', '--velocity', type=int,
+                        default=10, help='''velocidad de la culebrita''')
+    parser.add_argument('-a', '--acceleration', type=float,
+                        default=0, help='''aceleracion de la culebrita''')
 
     args = parser.parse_args()
-    print(args)
     execute(args)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
