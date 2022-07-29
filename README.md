@@ -1,16 +1,16 @@
 # Snake
 
-El programa permite cargar un mapa desde un archivo de texto(donde 0
-representa que no hay nada en la celda y 3 representa un obstaculo), ademas se
+El programa permite cargar un mapa desde un archivo de texto(donde `0`
+representa que no hay nada en la celda y `3` representa un obstaculo), ademas se
 pueden agregar obstaculos en celda deseada haciendo click con el mouse.
-Mediante la pulsacion de la tecla SPACE o p se puede pausar el juego, ademas se
-puede tomar una captura de pantalla con la tecla s, y si se presiona la
-tecla e la configuracion del tablero se guarda en un archivo de texto.
+Mediante la pulsacion de la tecla `SPACE` o `p` se puede pausar el juego, ademas se
+puede tomar una captura de pantalla con la tecla `s`, y si se presiona la
+tecla `e` la configuracion del tablero se guarda en un archivo de texto.
 
 
 usage:
 
-      snake.py [-h] [--filename FILENAME] [-o NAME] [-w WIDTH]
+      main.py [-h] [--filename FILENAME] [-o NAME] [-w WIDTH]
                       [--height HEIGHT] [-mw MARGIN_WIDTH] [-mh MARGIN_HEIGHT]
                       [-cw CELL_WIDTH] [-ch CELL_HEIGHT] [-sbc SBC] [-f FOOD]
                       [-bc COLOR] [-cf COLOR] [-cs COLOR] [-cc COLOR] [-v VELOCITY]
@@ -72,14 +72,15 @@ Los colores disponibles son:
 
 
 ## Ejemplos
-python snake.py --color-food GOLDEN --cell-width 20 --cell-height 20 --width 20 --height 20 -mw 30 -mh 30
-
+```bash
+python main.py --color-food GOLDEN --cell-width 20 --cell-height 20 --width 20 --height 20 -mw 30 -mh 30
+```
 
 ![](https://github.com/Luispapiernik/Divertimentos/blob/master/Snake/Snake0.png)
 
 
-
-python snake.py --color-food GOLDEN --cell-width 20 --cell-height 20 --width 20 --height 20 -mw 30 -mh 30 --filename map.txt
-
+```bash
+python main.py --color-food GOLDEN --cell-width 20 --cell-height 20 --width 20 --height 20 -mw 30 -mh 30 --filename storage/maps/map.txt
+```
 
 ![prueba](https://github.com/Luispapiernik/Divertimentos/blob/master/Snake/Snake1.png)
