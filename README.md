@@ -69,8 +69,8 @@ Los colores disponibles son:
       - RED
       - BROWN
       - GOLDEN
-   
-   
+
+
 ## Ejemplos
 python snake.py --color-food GOLDEN --cell-width 20 --cell-height 20 --width 20 --height 20 -mw 30 -mh 30
 

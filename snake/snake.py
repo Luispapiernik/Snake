@@ -1,9 +1,8 @@
 from collections import deque
-from random import randint
 from copy import deepcopy
+from random import randint
 
 from snake.cellgraph import System
-
 
 DIRECTIONS = [(1, 0), (-1, 0), (0, -1), (0, 1)]
 
@@ -19,17 +18,17 @@ class Snake(System):
 
         self.baseMatrix = matrix
 
-        super(Snake, self).__init__(matrix, colors=colors, name='Snake',
-                                    clear=False, export=True, add=add)
+        super().__init__(
+            matrix, colors=colors, name="Snake", clear=False, export=True, add=add
+        )
 
-        self.event['keyDown'].append(self.__keyDown)
+        self.event["keyDown"].append(self.__keyDown)
         self.gameover = False
         self.pause = False
 
         self.size = self.height, self.width
         self.dir = (0, 0)
-        self.pos = deque([(randint(0, self.height - 1),
-                           randint(0, self.width - 1))])
+        self.pos = deque([(randint(0, self.height - 1), randint(0, self.width - 1))])
         self.food = deque([])
 
         for i in range(food):
@@ -37,16 +36,16 @@ class Snake(System):
 
     def getCaption(self):
         if self.gameover:
-            return 'Game Over ' + str(len(self.pos))
-        return 'Snake ' + str(len(self.pos))
+            return "Game Over " + str(len(self.pos))
+        return "Snake " + str(len(self.pos))
 
     def getColor(self, i, j):
         key = self.matrix[i][j] or self.baseMatrix[i][j]
-        return self.colors.get(key, 'BLACK')
+        return self.colors.get(key, "BLACK")
 
     def add(self, pos, _):
         """agrega celulas al tablero"""
-        super(Snake, self).add(pos, _, self.baseMatrix, 3, 6)
+        super().add(pos, _, self.baseMatrix, 3, 6)
 
     def collide(self, pos=None, wall=False, direction=None):
         direction = direction or self.dir
@@ -63,28 +62,29 @@ class Snake(System):
         return False
 
     def __keyDown(self, key):
-        if key == 'r':
+        if key == "r":
             self.dir = (0, 0)
-            self.pos = deque([(randint(0, self.height - 1),
-                               randint(0, self.width - 1))])
-        if key == 'p' or key == 'space':
+            self.pos = deque(
+                [(randint(0, self.height - 1), randint(0, self.width - 1))]
+            )
+        if key == "p" or key == "space":
             self.pause = not self.pause
         if not self.pause and not self.gameover:
-            if (key == 'up' and not
-                    self.collide([self.pos[int(len(self.pos) > 1)]],
-                                 direction=DIRECTIONS[1])):
+            if key == "up" and not self.collide(
+                [self.pos[int(len(self.pos) > 1)]], direction=DIRECTIONS[1]
+            ):
                 self.dir = DIRECTIONS[1]
-            elif (key == 'down' and not
-                    self.collide([self.pos[int(len(self.pos) > 1)]],
-                                 direction=DIRECTIONS[0])):
+            elif key == "down" and not self.collide(
+                [self.pos[int(len(self.pos) > 1)]], direction=DIRECTIONS[0]
+            ):
                 self.dir = DIRECTIONS[0]
-            elif (key == 'right' and not
-                    self.collide([self.pos[int(len(self.pos) > 1)]],
-                                 direction=DIRECTIONS[3])):
+            elif key == "right" and not self.collide(
+                [self.pos[int(len(self.pos) > 1)]], direction=DIRECTIONS[3]
+            ):
                 self.dir = DIRECTIONS[3]
-            elif (key == 'left' and not
-                    self.collide([self.pos[int(len(self.pos) > 1)]],
-                                 direction=DIRECTIONS[2])):
+            elif key == "left" and not self.collide(
+                [self.pos[int(len(self.pos) > 1)]], direction=DIRECTIONS[2]
+            ):
                 self.dir = DIRECTIONS[2]
             else:  # solo por simetria
                 pass
@@ -113,7 +113,8 @@ class Snake(System):
 
     def update(self):
         self.gameover = self.collide(wall=True) or (
-            self.collide(self.pos) and len(self.pos) != 1)
+            self.collide(self.pos) and len(self.pos) != 1
+        )
 
         if not self.pause and not self.gameover:
             self.move(self.collide(self.food))
